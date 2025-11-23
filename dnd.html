@@ -1,0 +1,1349 @@
+<!--
+Copyright (C) 2025 anustoop
+
+This program is free (libre)  software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, version 3.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <meta name="description" content="dnd's not discord">
+  <meta name="theme-color" content="#0d0d0d">
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net;
+    connect-src 'self' https://cdn.jsdelivr.net wss://relay.damus.io wss://nos.lol wss://relay.nostr.band wss://atlas.nostr.land wss://relay.snort.social wss://nostr.bitcoiner.social wss://offchain.pub wss://relay.nostrplebs.com;
+    style-src 'self' 'unsafe-inline';
+    img-src 'self' data:;
+    font-src 'self';
+    object-src 'none';
+  ">
+  <title>dnd</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: 'Courier New', 'Courier', monospace;
+      background: #0d0d0d;
+      color: #997755;
+      display: flex;
+      flex-direction: column;
+      font-size: 13px;
+      height: 100vh;
+    }
+
+    header {
+      padding: 12px;
+      border-bottom: 1px solid #443322;
+      background: #0a0a0a;
+      flex-shrink: 0;
+    }
+
+    header h1 {
+      margin: 0 0 8px 0;
+      font-size: 1.1em;
+      letter-spacing: 2px;
+      color: #aa8866;
+      font-weight: normal;
+    }
+
+    .header-controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .header-status {
+      color: #664433;
+      font-size: 0.9em;
+      flex: 1;
+    }
+
+    .header-buttons {
+      display: flex;
+      gap: 6px;
+    }
+
+    .main-container {
+      display: flex;
+      flex: 1;
+      gap: 0;
+      overflow: hidden;
+    }
+
+    .left-side {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      gap: 0;
+      overflow: hidden;
+    }
+
+    button {
+      background: #1a1410;
+      color: #997755;
+      border: 1px solid #332211;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-family: monospace;
+      border-radius: 2px;
+      font-size: 0.9em;
+      min-height: 34px;
+      transition: none;
+    }
+
+    button:hover {
+      background: #221a14;
+      border-color: #443322;
+    }
+
+    button:active {
+      background: #332211;
+    }
+
+    button.secondary {
+      color: #664433;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+      border-bottom: 1px solid #221a14;
+      background: #0a0a0a;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+
+    .control-group {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .control-label {
+      color: #664433;
+      font-size: 0.9em;
+    }
+
+    input[type="number"] {
+      width: 60px;
+      background: #0a0a0a;
+      color: #997755;
+      border: 1px solid #332211;
+      padding: 6px;
+      border-radius: 2px;
+      font-family: monospace;
+      font-size: 0.9em;
+      min-height: 34px;
+    }
+
+    select {
+      background: #0a0a0a;
+      color: #997755;
+      border: 1px solid #332211;
+      padding: 6px 8px;
+      border-radius: 2px;
+      font-family: monospace;
+      font-size: 0.9em;
+      cursor: pointer;
+      min-height: 34px;
+    }
+
+    #feed {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      border: none;
+      margin: 0;
+      padding: 10px;
+      background: #0a0a0a;
+      border-radius: 0;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    #feed::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    #feed::-webkit-scrollbar-track {
+      background: #0a0a0a;
+    }
+
+    #feed::-webkit-scrollbar-thumb {
+      background: #332211;
+      border-radius: 2px;
+    }
+
+    #feed::-webkit-scrollbar-thumb:hover {
+      background: #443322;
+    }
+
+    .input-section {
+      padding: 10px;
+      border-top: 1px solid #221a14;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+      background: #0a0a0a;
+    }
+
+    .input-area {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    textarea {
+      background: #0a0a0a;
+      color: #997755;
+      border: 1px solid #332211;
+      padding: 8px;
+      font-family: monospace;
+      width: 100%;
+      resize: none;
+      border-radius: 2px;
+      min-height: 80px;
+      max-height: 200px;
+      font-size: 13px;
+    }
+
+    textarea::placeholder {
+      color: #554433;
+    }
+
+    .send-button {
+      padding: 8px 16px;
+      min-height: 36px;
+      align-self: flex-end;
+      width: auto;
+    }
+
+    .message {
+      margin-bottom: 8px;
+      padding: 10px;
+      background: #1a1410;
+      border-left: 3px solid #443322;
+      word-break: break-word;
+      font-size: 0.9em;
+      border-radius: 1px;
+    }
+
+    .message.own {
+      border-left-color: #997755;
+      background: #221a14;
+      margin-left: 20px;
+    }
+
+    .message.encrypted {
+      border-left-color: #aa6633;
+      background: #1a1108;
+    }
+
+    .message-header {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 6px;
+      font-size: 0.85em;
+    }
+
+    .message-sender {
+      color: #aa8866;
+      font-weight: bold;
+      cursor: pointer;
+      border-bottom: 1px dotted #554433;
+    }
+
+    .message-sender:hover {
+      color: #cc9966;
+    }
+
+    .message-time {
+      color: #554433;
+      margin-left: auto;
+    }
+
+    .message-content {
+      color: #997755;
+      line-height: 1.4;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.92);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-backdrop {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+
+    .modal-content {
+      background: #0a0a0a;
+      border: 1px solid #443322;
+      padding: 20px;
+      border-radius: 2px;
+      width: 90vw;
+      max-width: 500px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .modal-content h2 {
+      margin-top: 0;
+      color: #aa8866;
+      font-weight: normal;
+      font-size: 1.2em;
+    }
+
+    .modal-section {
+      margin-bottom: 16px;
+    }
+
+    .modal-section h3 {
+      color: #aa8866;
+      font-size: 0.95em;
+      margin: 12px 0 8px 0;
+    }
+
+    .modal-section p {
+      color: #997755;
+      line-height: 1.5;
+      margin: 0 0 8px 0;
+      font-size: 0.9em;
+    }
+
+    .modal-section ul {
+      color: #997755;
+      margin: 8px 0;
+      padding-left: 20px;
+      font-size: 0.9em;
+      line-height: 1.6;
+    }
+
+    .modal-section li {
+      margin-bottom: 4px;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      background: #332211;
+      border-radius: 2px;
+      font-size: 0.85em;
+      color: #664433;
+    }
+
+    .status-badge.good {
+      color: #88cc66;
+    }
+
+    .status-badge.warning {
+      color: #ff9966;
+    }
+
+    .status-badge.critical {
+      color: #ff6b6b;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+
+    .modal-buttons button {
+      flex: 1;
+      min-height: 36px;
+    }
+
+    .loading {
+      text-align: center;
+      color: #664433;
+      padding: 30px;
+      font-size: 0.9em;
+    }
+
+    .friends-section {
+      display: none;
+      padding: 10px;
+      border-bottom: 1px solid #221a14;
+      background: #0a0a0a;
+      flex-shrink: 0;
+    }
+
+    .friends-label {
+      color: #664433;
+      font-size: 0.85em;
+      margin-bottom: 8px;
+    }
+
+    .friends-list {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .friend-btn {
+      background: #1a1410;
+      color: #997755;
+      border: 1px solid #332211;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-family: monospace;
+      font-size: 0.85em;
+      border-radius: 2px;
+      min-height: 32px;
+    }
+
+    .friend-btn:hover {
+      background: #221a14;
+      border-color: #443322;
+    }
+
+    .friend-btn.active {
+      background: #332211;
+      color: #cc9966;
+      border-color: #554433;
+    }
+
+    .friend-btn .delete {
+      margin-left: 6px;
+      cursor: pointer;
+      opacity: 0.6;
+    }
+
+    .friends-buttons {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .friends-buttons button {
+      flex: 1;
+      min-width: 80px;
+      font-size: 0.85em;
+      padding: 6px 10px;
+      min-height: 32px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h1>dnd</h1>
+    <div class="header-controls">
+      <div class="header-status">
+        <span id="status">connecting...</span>
+        <span id="userIdDisplay" style="margin-left: 15px; color: #664433;">guest</span>
+      </div>
+      <div class="header-buttons">
+        <button class="secondary" id="btn-home">home</button>
+        <button class="secondary" id="btn-about">about</button>
+        <button class="secondary" id="btn-security">security</button>
+        <button id="btn-reload">reload</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="main-container">
+    <div class="left-side">
+      <div id="friendsSection" class="friends-section">
+        <div class="friends-label">Send to:</div>
+        <div class="friends-list">
+          <button class="friend-btn active" id="btn-everyone">Everyone</button>
+          <div id="friendsList"></div>
+        </div>
+        <div class="friends-buttons">
+          <button id="btn-add-friend">Add Friend</button>
+          <button id="btn-export-friends">Export</button>
+          <button id="btn-import-friends">Import</button>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="control-group">
+          <span class="control-label">channel:</span>
+          <input type="number" id="channelNum" value="104" min="1">
+          <select id="channelUnit">
+            <option value="1">.00</option>
+            <option value="1000">kilo</option>
+            <option value="1000000" selected>mega</option>
+            <option value="1000000000">giga</option>
+            <option value="1000000000000">tera</option>
+            <option value="1000000000000000">peta</option>
+          </select>
+          <button id="btn-go-channel">go</button>
+          <button id="btn-home-channel" style="margin-left: auto;">home</button>
+        </div>
+      </div>
+
+      <div id="feed" role="log" aria-label="message feed" aria-live="polite">
+        <div class="loading">connecting to relays...</div>
+      </div>
+
+      <div class="input-section">
+        <div class="input-area">
+          <textarea id="messageInput" placeholder="type a message..." role="textbox" aria-multiline="true"></textarea>
+        </div>
+        <button class="send-button" id="btn-send">send</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="aboutModal" class="modal">
+    <div class="modal-backdrop" id="about-backdrop"></div>
+    <div class="modal-content">
+      <h2>about</h2>
+
+      <div class="modal-section">
+        <h3>what is dnd?</h3>
+        <p>dnd is not discord</p>
+      </div>
+
+      <div class="modal-section">
+        <h3>faq</h3>
+        <ul>
+          <li><strong>channel:</strong> there are 9 quadrillion channels. each channel is its own room. everyone gets
+            one.</li>
+          <li><strong>which one do pick?:</strong> any number between 0 - 9000000000000000 </li>
+          <li><strong>are messages encrypted? by default:</strong> no </li>
+          <li><strong>then:</strong> click on someones name, add them. select their name to send private messages</li>
+          <li><strong>click on everyone:</strong> makes messages public again</li>
+          <li><strong>account:</strong> you get logged in as a guest</li>
+          <li><strong>why the burners:</strong> novel nosql implementation</li>
+          <li><strong>reload:</strong> reloads you into another guest account</li>
+        </ul>
+      </div>
+
+      <div class="modal-buttons">
+        <button id="btn-close-about">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="securityModal" class="modal">
+    <div class="modal-backdrop" id="security-backdrop"></div>
+    <div class="modal-content">
+      <h2>security</h2>
+
+      <div class="modal-section">
+        <h3>encrypted (end-to-end)</h3>
+        <ul>
+          <li><strong>message content:</strong> XChaCha20-Poly1305 encryption</li>
+          <li><strong>authenticity:</strong> Schnorr signatures verify sender</li>
+          <li><strong>private messages:</strong> only recipient has decryption key</li>
+        </ul>
+      </div>
+
+      <div class="modal-section">
+        <h3>metadata leaked</h3>
+        <ul>
+          <li>public key</li>
+          <li>timestamp when sent</li>
+          <li>that a message exists</li>
+        </ul>
+      </div>
+      <div class="modal-buttons">
+        <button id="btn-close-security">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="addFriendModal" class="modal">
+    <div class="modal-content">
+      <h2>Add Friend</h2>
+      <input type="text" id="friendName" placeholder="alice"
+        style="width: 100%; background: #0a0a0a; color: #997755; border: 1px solid #332211; padding: 8px; margin: 10px 0; border-radius: 2px; font-family: monospace;"
+        onkeydown="if (event.key === 'Enter') { event.preventDefault(); AppAPI.saveFriend(); }">
+      <div style="display: flex; gap: 8px; margin: 10px 0;">
+        <input type="text" id="friendPubkey" placeholder="npub or hex" readonly
+          style="flex: 1; background: #0a0a0a; color: #997755; border: 1px solid #332211; padding: 8px; border-radius: 2px; font-family: monospace; cursor: not-allowed;">
+        <button id="btn-copy-friend-key"
+          style="padding: 8px 12px; min-height: 34px; flex: 0 0 auto; font-size: 0.85em;">Copy</button>
+      </div>
+      <div class="modal-buttons">
+        <button id="btn-cancel-friend">Cancel</button>
+        <button id="btn-save-friend">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as secp from 'https://cdn.jsdelivr.net/npm/@noble/secp256k1@1.7.0/+esm';
+    import { xchacha20poly1305 } from 'https://cdn.jsdelivr.net/npm/@noble/ciphers@0.4.1/chacha/+esm';
+    import { hkdf } from 'https://cdn.jsdelivr.net/npm/@noble/hashes@1.3.3/hkdf/+esm';
+    import { sha256 } from 'https://cdn.jsdelivr.net/npm/@noble/hashes@1.3.3/sha256/+esm';
+    import { randomBytes } from 'https://cdn.jsdelivr.net/npm/@noble/hashes@1.3.3/utils/+esm';
+
+    const relayUrls = [
+      'wss://relay.damus.io',
+      'wss://nos.lol',
+      'wss://relay.nostr.band',
+      'wss://atlas.nostr.land',
+      'wss://relay.snort.social'
+    ];
+
+    let sockets = [];
+    let relayStatus = {};
+    let currentChannel = { num: 104, unit: 1000000 };
+    let currentKind = 104 * 1000000;
+    let selectedRecipient = null;
+    let allMessages = [];
+    let friends = JSON.parse(sessionStorage.getItem('friends') || '{}');
+    let sentMessages = {};
+    let loadingTimer = null;
+    let myPrivateKey = null;
+    let myPublicKey = null;
+    let messagesSeen = new Set();
+
+    let renderPending = false;
+    let lastRenderTime = 0;
+    const RENDER_THROTTLE = 100;
+
+    function calcPadding(len) {
+      if (len <= 32) return 32;
+      const pow = 1 << (Math.floor(Math.log2(len - 1)) + 1);
+      const chunk = pow <= 256 ? 32 : pow / 8;
+      return chunk * Math.ceil(len / chunk);
+    }
+
+    function padMessage(text) {
+      const enc = new TextEncoder();
+      const data = enc.encode(text);
+      const len = data.length;
+      const padded = calcPadding(len);
+
+      const result = new Uint8Array(2 + padded);
+      result[0] = (len >> 8) & 0xff;
+      result[1] = len & 0xff;
+      result.set(data, 2);
+      return result;
+    }
+
+    function unpadMessage(data) {
+      const len = (data[0] << 8) | data[1];
+      if (len < 1 || len > data.length - 2) {
+        throw new Error('Bad padding');
+      }
+      const decoded = data.slice(2, 2 + len);
+      return new TextDecoder().decode(decoded);
+    }
+
+    function deriveKey(privkey, pubkey) {
+      pubkey = pubkey.trim().toLowerCase();
+      if (!/^[a-f0-9]{64}$/.test(pubkey)) {
+        throw new Error('Invalid pubkey');
+      }
+
+      const bytes = new Uint8Array(32);
+      for (let i = 0; i < 32; i++) {
+        bytes[i] = parseInt(pubkey.substr(i * 2, 2), 16);
+      }
+
+      const prefixed = new Uint8Array(33);
+      prefixed[0] = 0x02;
+      prefixed.set(bytes, 1);
+
+      const shared = secp.getSharedSecret(privkey, prefixed);
+      const salt = new TextEncoder().encode('nip44-v2');
+      return hkdf(sha256, shared.slice(1, 33), salt, undefined, 32);
+    }
+
+    async function encryptMsg(text, recipientKey) {
+      const key = deriveKey(myPrivateKey, recipientKey);
+      const padded = padMessage(text);
+      const nonce = randomBytes(24);
+
+      const cipher = xchacha20poly1305(key, nonce);
+      const ciphertext = cipher.encrypt(padded);
+
+      const payload = new Uint8Array(1 + 24 + ciphertext.length);
+      payload[0] = 0x02;
+      payload.set(nonce, 1);
+      payload.set(ciphertext, 25);
+
+      return btoa(String.fromCharCode(...payload));
+    }
+
+    async function decryptMsg(base64, senderKey) {
+      try {
+        const binary = atob(base64);
+        const payload = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+          payload[i] = binary.charCodeAt(i);
+        }
+
+        if (payload[0] !== 0x02 || payload.length < 26) {
+          return null;
+        }
+
+        const nonce = payload.slice(1, 25);
+        const ciphertext = payload.slice(25);
+
+        if (ciphertext.length < 16) return null;
+
+        const key = deriveKey(myPrivateKey, senderKey);
+        const cipher = xchacha20poly1305(key, nonce);
+        const padded = cipher.decrypt(ciphertext);
+
+        return unpadMessage(padded);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function connectRelays() {
+      relayUrls.forEach(url => {
+        if (relayStatus[url] === 'connected' || relayStatus[url] === 'connecting') {
+          return;
+        }
+
+        relayStatus[url] = 'connecting';
+        const ws = new WebSocket(url);
+
+        ws.onopen = () => {
+          relayStatus[url] = 'connected';
+          updateStatusDisplay();
+          subscribeToChannel(ws);
+        };
+
+        ws.onmessage = (evt) => {
+          try {
+            const msg = JSON.parse(evt.data);
+            if (msg[0] === 'EVENT') {
+              receiveMsg(msg[2]);
+            }
+          } catch (e) {
+            // ignore
+          }
+        };
+
+        ws.onerror = () => {
+          relayStatus[url] = 'error';
+          updateStatusDisplay();
+        };
+
+        ws.onclose = () => {
+          relayStatus[url] = 'closed';
+          updateStatusDisplay();
+          setTimeout(() => {
+            if (relayStatus[url] !== 'connected') {
+              connectRelays();
+            }
+          }, 3000);
+        };
+
+        sockets.push(ws);
+      });
+    }
+
+    function updateStatusDisplay() {
+      const ok = Object.values(relayStatus).filter(s => s === 'connected').length;
+      const total = relayUrls.length;
+      document.getElementById('status').textContent = `connected (${ok}/${total})`;
+    }
+
+    function subscribeToChannel(socket) {
+      const sub = ['REQ', 'sub-' + Date.now(), { kinds: [currentKind], limit: 100 }];
+      try {
+        socket.send(JSON.stringify(sub));
+      } catch (e) {
+        console.error('Subscribe failed:', e);
+      }
+    }
+
+    async function receiveMsg(evt) {
+      if (evt.kind !== currentKind) return;
+      if (!evt.pubkey || !evt.sig || !evt.id || !evt.content) return;
+
+      if (!/^[a-f0-9]{64}$/.test(evt.pubkey)) return;
+      if (messagesSeen.has(evt.id)) return;
+
+      try {
+        const sig = new Uint8Array(32);
+        for (let i = 0; i < 64; i += 2) {
+          sig[i / 2] = parseInt(evt.sig.substr(i, 2), 16);
+        }
+
+        const eventJson = JSON.stringify([0, evt.pubkey, evt.created_at, evt.kind, evt.tags || [], evt.content]);
+        const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(eventJson));
+        const hashBytes = new Uint8Array(hash);
+
+        // Reconstruct full sig
+        const fullSig = new Uint8Array(64);
+        for (let i = 0; i < 64; i++) {
+          fullSig[i] = parseInt(evt.sig.substr(i * 2, 2), 16);
+        }
+
+        const valid = await secp.schnorr.verify(fullSig, hashBytes, evt.pubkey);
+        if (!valid) return;
+      } catch (e) {
+        return;
+      }
+
+      messagesSeen.add(evt.id);
+      if (loadingTimer) clearTimeout(loadingTimer);
+
+      let text = evt.content;
+      let encrypted = false;
+
+      if (sentMessages[evt.id]) {
+        text = sentMessages[evt.id];
+        delete sentMessages[evt.id];
+      } else {
+        // Check if looks like encrypted payload
+        if (evt.content.length > 50) {
+          try {
+            const b = atob(evt.content);
+            if (b.charCodeAt(0) === 0x02 && b.length > 25) {
+              encrypted = true;
+              const decrypted = await decryptMsg(evt.content, evt.pubkey);
+              if (decrypted) {
+                text = decrypted;
+              } else {
+                text = '[encrypted]';
+              }
+            }
+          } catch (e) {
+            // not encrypted
+          }
+        }
+      }
+
+      allMessages.push({
+        id: evt.id,
+        pubkey: evt.pubkey,
+        content: text,
+        isEncrypted: encrypted,
+        timestamp: evt.created_at,
+        senderName: friends[evt.pubkey] || evt.pubkey.slice(0, 8)
+      });
+
+      scheduleRender();
+    }
+
+    function scheduleRender() {
+      if (renderPending) return;
+
+      const now = Date.now();
+      const timeSinceLastRender = now - lastRenderTime;
+
+      if (timeSinceLastRender >= RENDER_THROTTLE) {
+        renderFeed();
+      } else {
+        renderPending = true;
+        setTimeout(() => {
+          renderPending = false;
+          renderFeed();
+        }, RENDER_THROTTLE - timeSinceLastRender);
+      }
+    }
+
+    function renderFeed() {
+      const feed = document.getElementById('feed');
+      const atBottom = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 5;
+
+      if (feed.querySelector('.loading')) {
+        feed.innerHTML = '';
+      }
+
+      const sorted = [...allMessages].sort((a, b) => a.timestamp - b.timestamp);
+
+      // Keep only last 150 in memory
+      const MAX = 150;
+      while (allMessages.length > MAX) {
+        allMessages.shift();
+      }
+
+      // Show last 100
+      const show = sorted.slice(-100);
+
+      // Clear old content
+      feed.innerHTML = '';
+
+      // Batch DOM operations
+      const frag = document.createDocumentFragment();
+
+      for (let i = 0; i < show.length; i++) {
+        const msg = show[i];
+        const div = document.createElement('div');
+        div.className = msg.pubkey === myPublicKey ? 'message own' : 'message';
+        if (msg.isEncrypted) div.classList.add('encrypted');
+
+        const hdr = document.createElement('div');
+        hdr.className = 'message-header';
+
+        const nameEl = document.createElement('span');
+        nameEl.className = 'message-sender';
+        nameEl.textContent = msg.senderName;
+        nameEl.onclick = () => AppAPI.addFromMessage(msg.pubkey, msg.senderName);
+
+        const timeEl = document.createElement('span');
+        timeEl.className = 'message-time';
+        timeEl.textContent = new Date(msg.timestamp * 1000).toLocaleTimeString();
+
+        hdr.appendChild(nameEl);
+        hdr.appendChild(timeEl);
+
+        const content = document.createElement('div');
+        content.className = 'message-content';
+        content.textContent = msg.content;
+
+        div.appendChild(hdr);
+        div.appendChild(content);
+        frag.appendChild(div);
+      }
+
+      feed.appendChild(frag);
+
+      if (atBottom) {
+        feed.scrollTop = feed.scrollHeight;
+      }
+
+      lastRenderTime = Date.now();
+    }
+
+    window.AppAPI = {
+      goHome() {
+        document.getElementById('channelNum').value = 104;
+        document.getElementById('channelUnit').value = 1000000;
+        this.changeChannel();
+      },
+
+      changeChannel() {
+        const num = parseInt(document.getElementById('channelNum').value) || 1;
+        const unit = parseInt(document.getElementById('channelUnit').value) || 1;
+
+        const MAX = Number.MAX_SAFE_INTEGER;
+        currentKind = num * unit;
+
+        if (currentKind > MAX || currentKind < 0) {
+          const units = document.getElementById('channelUnit').options;
+          const name = units[units.selectedIndex].text;
+          const max = Math.floor(MAX / unit);
+          alert(`Out of range.\n${name}: 1-${max.toLocaleString()}`);
+          return;
+        }
+
+        currentChannel = { num, unit };
+        document.getElementById('feed').innerHTML = '<div class="loading">loading...</div>';
+
+        messagesSeen.clear();
+        allMessages.length = 0;
+        sentMessages = {};
+
+        if (loadingTimer) clearTimeout(loadingTimer);
+        loadingTimer = setTimeout(() => {
+          const f = document.getElementById('feed');
+          if (f.querySelector('.loading')) {
+            f.innerHTML = '<div style="text-align: center; color: #555; padding: 40px; font-size: 0.9em;">first one here</div>';
+          }
+        }, 2000);
+
+        sockets.forEach(s => {
+          if (s.readyState === WebSocket.OPEN) {
+            subscribeToChannel(s);
+          }
+        });
+      },
+
+      async send() {
+        const text = document.getElementById('messageInput').value.trim();
+        if (!text || text.length > 10000) {
+          alert('message too short or too long');
+          return;
+        }
+
+        if (!currentKind || currentKind < 0 || currentKind > Number.MAX_SAFE_INTEGER) {
+          alert('bad channel');
+          return;
+        }
+
+        const ok = Object.values(relayStatus).filter(s => s === 'connected').length;
+        if (ok === 0) {
+          alert('Not connected to relays');
+          return;
+        }
+
+        let content = text;
+        if (selectedRecipient) {
+          if (!/^[a-f0-9]{64}$/.test(selectedRecipient)) {
+            alert('bad recipient');
+            return;
+          }
+          try {
+            content = await encryptMsg(text, selectedRecipient);
+          } catch (e) {
+            alert('encrypt failed: ' + e.message);
+            return;
+          }
+        }
+
+        const evt = {
+          kind: currentKind,
+          content: content,
+          pubkey: myPublicKey,
+          tags: [],
+          created_at: Math.floor(Date.now() / 1000)
+        };
+
+        const eventJson = JSON.stringify([0, evt.pubkey, evt.created_at, evt.kind, evt.tags, evt.content]);
+        const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(eventJson));
+        const hashHex = Array.from(new Uint8Array(hash))
+          .map(b => b.toString(16).padStart(2, '0')).join('');
+        evt.id = hashHex;
+
+        sentMessages[evt.id] = text;
+
+        const hashBytes = new Uint8Array(32);
+        for (let i = 0; i < 32; i++) {
+          hashBytes[i] = parseInt(hashHex.substr(i * 2, 2), 16);
+        }
+
+        const sig = await secp.schnorr.sign(hashBytes, myPrivateKey);
+        evt.sig = Array.from(sig).map(b => b.toString(16).padStart(2, '0')).join('');
+
+        let sent = 0;
+        sockets.forEach((s) => {
+          if (s.readyState === WebSocket.OPEN) {
+            try {
+              s.send(JSON.stringify(['EVENT', evt]));
+              sent++;
+            } catch (e) {
+              console.error('Send error:', e);
+            }
+          }
+        });
+
+        if (sent > 0) {
+          document.getElementById('messageInput').value = '';
+          const btn = document.getElementById('btn-send');
+          const orig = btn.textContent;
+          btn.textContent = 'Sent';
+          setTimeout(() => { btn.textContent = orig; }, 1500);
+        }
+      },
+
+      updateFriendsList() {
+        const list = document.getElementById('friendsList');
+        list.innerHTML = '';
+
+        Object.entries(friends).forEach(([key, name]) => {
+          const btn = document.createElement('button');
+          btn.className = 'friend-btn';
+          btn.textContent = name + ' ';
+
+          const del = document.createElement('span');
+          del.className = 'delete';
+          del.textContent = '×';
+          del.onclick = (e) => {
+            e.stopPropagation();
+            if (confirm('Remove ' + name + '?')) {
+              delete friends[key];
+              sessionStorage.setItem('friends', JSON.stringify(friends));
+              this.updateFriendsList();
+            }
+          };
+
+          btn.appendChild(del);
+          btn.onclick = () => this.pickRecipient(key);
+          list.appendChild(btn);
+        });
+
+        if (Object.keys(friends).length > 0) {
+          document.getElementById('friendsSection').style.display = 'block';
+        }
+      },
+
+      pickRecipient(key) {
+        selectedRecipient = key;
+        document.querySelectorAll('.friend-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.friend-btn').forEach(b => {
+          if (b.textContent.includes(friends[key])) {
+            b.classList.add('active');
+          }
+        });
+      },
+
+      addFromMessage(key, name) {
+        document.getElementById('friendName').value = name;
+        document.getElementById('friendPubkey').value = key;
+        document.getElementById('addFriendModal').classList.add('active');
+        document.getElementById('friendName').focus();
+      },
+
+      openAddFriendDialog() {
+        document.getElementById('friendName').value = '';
+        document.getElementById('friendPubkey').value = '';
+        document.getElementById('addFriendModal').classList.add('active');
+        document.getElementById('friendName').focus();
+      },
+
+      closeAddFriendDialog() {
+        document.getElementById('addFriendModal').classList.remove('active');
+      },
+
+      copyKey() {
+        const field = document.getElementById('friendPubkey');
+        if (field.value) {
+          navigator.clipboard.writeText(field.value).then(() => {
+            const btn = event.target;
+            const text = btn.textContent;
+            btn.textContent = 'Copied';
+            setTimeout(() => { btn.textContent = text; }, 1500);
+          }).catch(e => alert('Copy failed: ' + e.message));
+        }
+      },
+
+      saveFriend() {
+        const name = document.getElementById('friendName').value.trim();
+        let key = document.getElementById('friendPubkey').value.trim();
+
+        if (!name || !key) {
+          alert('Need name and key');
+          return;
+        }
+
+        if (key.startsWith('npub1')) {
+          try {
+            const cs = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
+            const last = key.lastIndexOf('1');
+            const part = key.slice(last + 1);
+            const vals = [];
+
+            for (let i = 0; i < part.length; i++) {
+              const idx = cs.indexOf(part[i]);
+              if (idx < 0) throw new Error('Bad bech32');
+              vals.push(idx);
+            }
+
+            const bytes = [];
+            let acc = 0, bits = 0;
+
+            for (let i = 0; i < vals.length; i++) {
+              acc = (acc << 5) | vals[i];
+              bits += 5;
+              if (bits >= 8) {
+                bits -= 8;
+                bytes.push((acc >> bits) & 255);
+              }
+            }
+
+            key = Array.from(new Uint8Array(bytes.slice(0, 32)))
+              .map(b => b.toString(16).padStart(2, '0')).join('');
+          } catch (e) {
+            alert('Bad npub: ' + e.message);
+            return;
+          }
+        }
+
+        if (!/^[a-f0-9]{64}$/i.test(key)) {
+          alert('Key must be 64 hex chars');
+          return;
+        }
+
+        friends[key.toLowerCase()] = name;
+        sessionStorage.setItem('friends', JSON.stringify(friends));
+        this.updateFriendsList();
+        this.closeAddFriendDialog();
+      },
+
+      exportFriends() {
+        const json = JSON.stringify(friends, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'friends.json';
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+
+      importFriends() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = (e) => {
+          const file = e.target.files[0];
+          const reader = new FileReader();
+
+          reader.onload = (ev) => {
+            try {
+              const data = JSON.parse(ev.target.result);
+              if (typeof data !== 'object' || Array.isArray(data)) {
+                alert('Bad format');
+                return;
+              }
+
+              let added = 0;
+              Object.entries(data).forEach(([key, val]) => {
+                if (/^[a-f0-9]{64}$/.test(key)) {
+                  friends[key] = val;
+                  added++;
+                }
+              });
+
+              sessionStorage.setItem('friends', JSON.stringify(friends));
+              this.updateFriendsList();
+              alert('Added ' + added + ' friends');
+            } catch (e) {
+              alert('Error: ' + e.message);
+            }
+          };
+
+          reader.readAsText(file);
+        };
+        input.click();
+      },
+
+      openAbout() {
+        document.getElementById('aboutModal').classList.add('active');
+      },
+
+      closeAbout() {
+        document.getElementById('aboutModal').classList.remove('active');
+      },
+
+      openSecurity() {
+        document.getElementById('securityModal').classList.add('active');
+      },
+
+      closeSecurity() {
+        document.getElementById('securityModal').classList.remove('active');
+      },
+
+      reload() {
+        myPrivateKey = null;
+        messagesSeen.clear();
+        allMessages = [];
+        sessionStorage.clear();
+        location.reload();
+      }
+    };
+
+    window.addEventListener('load', async () => {
+      const privKey = new Uint8Array(32);
+      crypto.getRandomValues(privKey);
+
+      const pubKeyBytes = secp.getPublicKey(privKey);
+      const pubKey = Array.from(pubKeyBytes.slice(1, 33))
+        .map(b => b.toString(16).padStart(2, '0')).join('');
+
+      myPrivateKey = privKey;
+      myPublicKey = pubKey;
+
+      document.getElementById('userIdDisplay').textContent = pubKey.slice(0, 12) + '...';
+
+      connectRelays();
+      AppAPI.updateFriendsList();
+
+      // Setup event listeners
+      document.getElementById('btn-home').addEventListener('click', () => AppAPI.goHome());
+      document.getElementById('btn-about').addEventListener('click', () => AppAPI.openAbout());
+      document.getElementById('btn-security').addEventListener('click', () => AppAPI.openSecurity());
+      document.getElementById('btn-reload').addEventListener('click', () => AppAPI.reload());
+
+      document.getElementById('btn-everyone').addEventListener('click', () => {
+        selectedRecipient = null;
+        document.querySelectorAll('.friend-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('btn-everyone').classList.add('active');
+      });
+
+      document.getElementById('btn-add-friend').addEventListener('click', () => AppAPI.openAddFriendDialog());
+      document.getElementById('btn-export-friends').addEventListener('click', () => AppAPI.exportFriends());
+      document.getElementById('btn-import-friends').addEventListener('click', () => AppAPI.importFriends());
+
+      document.getElementById('btn-go-channel').addEventListener('click', () => AppAPI.changeChannel());
+      document.getElementById('btn-home-channel').addEventListener('click', () => AppAPI.goHome());
+
+      document.getElementById('btn-send').addEventListener('click', () => AppAPI.send());
+
+      document.getElementById('about-backdrop').addEventListener('click', () => AppAPI.closeAbout());
+      document.getElementById('btn-close-about').addEventListener('click', () => AppAPI.closeAbout());
+
+      document.getElementById('security-backdrop').addEventListener('click', () => AppAPI.closeSecurity());
+      document.getElementById('btn-close-security').addEventListener('click', () => AppAPI.closeSecurity());
+
+      document.getElementById('btn-copy-friend-key').addEventListener('click', () => AppAPI.copyKey());
+      document.getElementById('btn-cancel-friend').addEventListener('click', () => AppAPI.closeAddFriendDialog());
+      document.getElementById('btn-save-friend').addEventListener('click', () => AppAPI.saveFriend());
+
+      document.getElementById('messageInput').addEventListener('keydown', (e) => {
+        if (e.key === 'enter' && !e.shiftKey) {
+          e.preventDefault();
+          AppAPI.send();
+        }
+      });
+
+      document.getElementById('channelUnit').addEventListener('change', () => {
+        requestAnimationFrame(() => AppAPI.changeChannel());
+      });
+
+      document.getElementById('channelNum').addEventListener('change', () => {
+        requestAnimationFrame(() => AppAPI.changeChannel());
+      });
+
+      requestAnimationFrame(() => AppAPI.changeChannel());
+
+      setInterval(() => {
+        const ok = Object.values(relayStatus).filter(s => s === 'connected').length;
+        if (ok === 0) {
+          connectRelays();
+        }
+      }, 30000);
+    });
+
+    console.log('dnd - initialized');
+  </script>
+
+</body>
+
+</html>
